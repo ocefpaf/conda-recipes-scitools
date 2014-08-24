@@ -1,0 +1,11 @@
+--- src/cfchecker/cfchecks.orig.py	2014-08-13 08:02:10.000000000 +0100
++++ src/cfchecker/cfchecks.py	2014-08-13 08:02:32.000000000 +0100
+@@ -49,7 +49,7 @@
+ # Use ctypes to interface to the UDUNITS-2 shared library
+ # The udunits2 library needs to be in a standard path o/w export LD_LIBRARY_PATH
+ from ctypes import *
+-udunits=CDLL("libudunits2.so")
++udunits=CDLL("libudunits2.dylib")
+  
+ STANDARDNAME = 'http://cf-pcmdi.llnl.gov/documents/cf-standard-names/standard-name-table/current/cf-standard-name-table.xml'
+ AREATYPES = 'http://cf-pcmdi.llnl.gov/documents/cf-standard-names/area-type-table/current/area-type-table.xml'

@@ -5,7 +5,6 @@ package:
 source:
     fn: udunits-2.2.16.tar.gz
     url: ftp://ftp.unidata.ucar.edu/pub/udunits/udunits-2.2.16.tar.gz
-    sha1: 57b4a30cd0adcec9e8d941e2464f0a22a52fe33b
 
 build:
     number: 0
