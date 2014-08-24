@@ -13,7 +13,7 @@ env:
 
 install:
     - # Replace the ssh protocol with https for all non-private files.
-    - find * -type f -exec sed -i 's/git\@github.com\:/https\:\/\/github\.com\//g' {} \;
+    - sed -i '' 's/git\@github.com\:/https\:\/\/github\.com\//g' */*.yaml
 
     - cd util/travis-ci
     - source install_conda.sh

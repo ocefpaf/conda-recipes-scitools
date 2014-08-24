@@ -13,6 +13,7 @@ requirements:
     - python
     - distribute
     - geos >=3.4.2
+    - cython
   run:
     - python
     - geos >=3.4.2
