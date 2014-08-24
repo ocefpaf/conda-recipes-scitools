@@ -12,6 +12,7 @@ requirements:
     - numpy
     - cython
     - proj4
+    - geos >=3.4
     - shapely
     - owslib # (only needed for test dependency)
   run:
