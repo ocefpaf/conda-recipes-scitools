@@ -7,7 +7,7 @@ fi
 bash miniconda.sh -b -p $HOME/miniconda
 export PATH="$HOME/miniconda/bin:$PATH"
 
-conda install conda-build=1.7.0 binstar --yes
+conda install conda-build binstar --yes
 
 # Crazily, conda needs jinja2...
 conda install jinja2 setuptools --yes
