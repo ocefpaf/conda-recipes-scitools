@@ -15,3 +15,10 @@ $PYTHON setup.py install --prefix=$PREFIX
 
 # Tidy up the fake static library.
 rm $PREFIX/lib/libhdf5.a
+
+
+# Record where this build was made for subsequent use in post-link.sh.
+# NB. Use the ".a" suffix so conda doesn't treat this as a text file and
+# automatically add it to the has_prefix_files category (with the
+# resulting with /opt/anaconda1anaconda2).
+echo "$PREFIX" > $PREFIX/.build_prefix.a

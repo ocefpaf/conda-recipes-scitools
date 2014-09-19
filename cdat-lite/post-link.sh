@@ -149,23 +149,11 @@ EOF
 chmod +x patchbinary.py
 
 BUILD_PREFIX=$(cat $PREFIX/.build_prefix.a | tr -d '\n')
-# Patch bin files.
-for file in $PREFIX/bin/grib* $PREFIX/bin/big2gribex
-do
-    ./patchbinary.py "$BUILD_PREFIX" "$PREFIX" "$file"
-done
-# Patch lib files.
-for file in $PREFIX/lib/libgrib*
-do
-    ./patchbinary.py "$BUILD_PREFIX" "$PREFIX" "$file"
-done
+BUILD_PREFIX="/opt/anaconda1anaconda2anaconda3"
+echo "REPLACING sa BLAH: ${BUILD_PREFIX} WITH ${PREFIX}."
 
 # TODO: Fix the version-specific location!
-# Patch pyc/pyo files.
-for file in $PREFIX/lib/python2.7/site-packages/*grib*
-do
-    ./patchbinary.py "$BUILD_PREFIX" "$PREFIX" "$file"
-done
+./patchbinary.py -E "${BUILD_PREFIX}/lib/libnetcdf.7.dylib" "${PREFIX}/lib/libnetcdf.7.dylib" "${PREFIX}/lib/python2.7/site-packages/cdtime.so"
 
 # Tidy up
 rm ./patchbinary.py
