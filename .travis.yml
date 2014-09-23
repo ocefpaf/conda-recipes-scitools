@@ -19,6 +19,8 @@ install:
     - source install_conda.sh
 
 script:
+    - export CONDA_PY=27
+    - export CONDA_NPY=17
     - python build_all.py
 
 after_success:
