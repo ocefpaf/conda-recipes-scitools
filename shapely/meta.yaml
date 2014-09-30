@@ -1,5 +1,6 @@
 package:
   name: shapely
+  # NOTE: As this version increases, so should the dependency version in cartopy.
   version: 1.4.1
 
 source:
