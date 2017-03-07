@@ -61,6 +61,9 @@ install:
     - cmd: conda config --add channels scitools
     - cmd: conda config --set show_channel_urls yes
 
+    # Workaround until conda-build-all is available for Python 3.6.
+    - cmd: conda install --yes --quiet python=3.5
+
     - cmd: conda install --yes --quiet -c conda-forge obvious-ci
     - cmd: conda install --yes --quiet -c conda-forge conda-build-all conda-build==2.0.10
     - cmd: conda install --yes --quiet conda==4.2.13 jinja2 anaconda-client
