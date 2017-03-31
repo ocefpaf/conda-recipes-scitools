@@ -38,20 +38,16 @@ export CONDA_NPY='19'
 export PYTHONUNBUFFERED=1
 echo "$config" > ~/.condarc
 
-conda config --add channels scitools
 conda config --set show_channel_urls True
 
-# Update both conda-build-all and conda-build to get latest "numpy x.x" specification support.
-conda install --yes --quiet -c conda-forge conda-build-all conda-build==2.0.10
-conda update --yes --force conda==4.2.13
-conda install -n root --yes --quiet jinja2 anaconda-client
+conda update --yes conda
+conda install --yes -c conda-forge conda-build-all
+# https://github.com/SciTools/conda-build-all/issues/79
+conda install --yes conda==4.2.16
 
 # A lock sometimes occurs with incomplete builds. The lock file is stored in build_artefacts.
 conda clean --lock
 
-conda install --yes anaconda-client
-conda install --yes conda-build==2.0.10
-conda install --yes conda==4.2.13
 conda info
 conda list
 unset LANG

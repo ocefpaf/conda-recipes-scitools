@@ -1,78 +1,84 @@
 environment:
 
-  CONDA_INSTALL_LOCN: "C:\\conda"
-
-  # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
-  # /E:ON and /V:ON options are not enabled in the batch script interpreter
-  # See: http://stackoverflow.com/a/13751649/163740
-  CMD_IN_ENV: "cmd /E:ON /V:ON /C obvci_appveyor_python_build_env.cmd"
-
   BINSTAR_TOKEN:
     # Generated with "anaconda auth --create --name conda-recipes-scitools-2016 -o SciTools" and
     # encrypted on ci.appveyor.com/tools/encrypt.
     secure: vEXaxIcVqImAv8mMqEGotj4Mym4uLVkHhf3jlksGimFJ88RcaF/hxdEUSt6HTxPr
 
   matrix:
-    # Note: Because we have to separate the py2 and py3 components due to compiler version, we have a race condition for non-python packages.
-    # Not sure how to resolve this, but maybe we should be tracking the VS version in the build string anyway?
-    - TARGET_ARCH: "x86"
-      CONDA_PY: "27"
+    - TARGET_ARCH: x64
       PY_CONDITION: "python >=2.7,<3"
-    - TARGET_ARCH: "x86"
-      CONDA_PY: "34"
+      CONDA_INSTALL_LOCN: C:\\Miniconda-x64
+
+    - TARGET_ARCH: x64
       PY_CONDITION: "python >=3.4,<3.5"
-    - TARGET_ARCH: "x86"
-      CONDA_PY: "35"
+      CONDA_INSTALL_LOCN: C:\\Miniconda35-x64
+
+    - TARGET_ARCH: x64
       PY_CONDITION: "python >=3.5,<3.6"
-    - TARGET_ARCH: "x64"
-      CONDA_PY: "27"
+      CONDA_INSTALL_LOCN: C:\\Miniconda35-x64
+
+    - TARGET_ARCH: x64
+      PY_CONDITION: "python >=3.6,<3.7"
+      CONDA_INSTALL_LOCN: C:\\Miniconda36-x64
+
+    - TARGET_ARCH: x86
       PY_CONDITION: "python >=2.7,<3"
-    - TARGET_ARCH: "x64"
-      CONDA_PY: "34"
+      CONDA_INSTALL_LOCN: C:\\Miniconda
+
+    - TARGET_ARCH: x86
       PY_CONDITION: "python >=3.4,<3.5"
-    - TARGET_ARCH: "x64"
-      CONDA_PY: "35"
+      CONDA_INSTALL_LOCN: C:\\Miniconda35
+
+    - TARGET_ARCH: x86
       PY_CONDITION: "python >=3.5,<3.6"
+      CONDA_INSTALL_LOCN: C:\\Miniconda35
+
+    - TARGET_ARCH: x86
+      PY_CONDITION: "python >=3.6,<3.7"
+      CONDA_INSTALL_LOCN: C:\\Miniconda36
 
 # We always use a 64-bit machine, but can build x86 distributions
 # with the TARGET_ARCH variable (which is used by CMD_IN_ENV).
 platform:
-    - x64
+  - x64
 
 install:
-    - setlocal enableextensions enabledelayedexpansion
-    - cmd: rmdir C:\cygwin /s /q
-    # Set the CONDA_NPY, although it has no impact on the actual build. We need this because of a test within conda-build.
-    - cmd: set CONDA_NPY=19
-    # Set the name of the channel label to upload to.
-    - cmd: set "LABEL_NAME=main"
-    # Only run the upload if the binstar token is present.
-    # Note: an "empty" variable in batch cannot be `set Z=""` (will be interpreted literally) or `set Z=` (unsets %Z%).
-    - cmd: set "UPLOAD_CHANNELS= "
-    - cmd: if defined BINSTAR_TOKEN set "UPLOAD_CHANNELS=--upload-channels scitools/label/%LABEL_NAME%"
-    - cmd: echo %UPLOAD_CHANNELS%
+  # If there is a newer build queued for the same PR cancel the previous one.
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+      https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+      Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+        throw "There are newer queued builds for this pull request, failing early." }
 
-    - appveyor DownloadFile "https://raw.githubusercontent.com/conda-forge/conda-smithy/master/bootstrap-obvious-ci-and-miniconda.py"
-    - cmd: python bootstrap-obvious-ci-and-miniconda.py %CONDA_INSTALL_LOCN% %TARGET_ARCH% 3 --without-obvci
-    - cmd: set CONDA_PY=%CONDA_PY%
-    - cmd: set PATH=%PATH%;%CONDA_INSTALL_LOCN%;%CONDA_INSTALL_LOCN%\scripts
-    - cmd: set PYTHONUNBUFFERED=1
+  # Remove cygwin (and therefore the git that comes with it).
+  - cmd: rmdir C:\cygwin /s /q
+  - setlocal enableextensions enabledelayedexpansion
 
-    - cmd: conda config --add channels scitools
-    - cmd: conda config --set show_channel_urls yes
+  # Add path, activate `conda` and update conda.
+  - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
+  - cmd: conda update -n root --yes conda
+  - cmd: conda install -n root --yes conda-build-all
+  # https://github.com/SciTools/conda-build-all/issues/79
+  - cmd: conda install -n root --yes conda=4.2.16
 
-    # Workaround until conda-build-all is available for Python 3.6.
-    - cmd: conda install --yes --quiet python=3.5
+  # Needed for building extensions in python2.7 x64 with cmake.
+  - cmd: conda install -n root --yes -c conda-forge vs2008_express_vc_python_patch
+  - cmd: call setup_x64
 
-    - cmd: conda install --yes --quiet -c conda-forge obvious-ci
-    - cmd: conda install --yes --quiet -c conda-forge conda-build-all conda-build==2.0.10
-    - cmd: conda install --yes --quiet conda==4.2.13 jinja2 anaconda-client
-    - cmd: conda list
+  # Add our channels.
+  - cmd: conda config --set show_channel_urls true
+  - cmd: conda config --add channels scitools
 
-    - cmd: conda info
+  # 2 cores available on Appveyor workers: https://www.appveyor.com/docs/build-configuration/#build-environment
+  # CPU_COUNT is passed through conda build: https://github.com/conda/conda-build/pull/1149
+  - cmd: set CPU_COUNT=2
+  - cmd: set PYTHONUNBUFFERED=1
+
+  - cmd: conda info
 
 # Skip .NET project specific build phase.
 build: off
 
 test_script:
-    - '%CMD_IN_ENV% conda-build-all .\ --inspect-channels scitools/label/%LABEL_NAME% %UPLOAD_CHANNELS% --matrix-condition "numpy >=1.8,<=1.10" "%PY_CONDITION%"'
+    - cmd: if not "%BINSTAR_TOKEN%" == "" (set UPLOAD=--upload-channels scitools) else (set UPLOAD=)
+    - 'conda-build-all .\ %UPLOAD% --inspect-channels scitools/label/main --matrix-conditions "numpy >=1.8,<=1.10" "%PY_CONDITION%"'
